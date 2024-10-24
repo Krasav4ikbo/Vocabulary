@@ -6,13 +6,32 @@
     <div class="my-custom-class-for-errors">
         {{ form_errors(form) }}
     </div>
-    <div class="row">
-        <div class="col-md-6">
-            {{ word }}
-        </div>
-        <div class="col-md-6">
-            {{ form_row(form.translation) }}
+    <h2 class="h3 mb-3 fw-normal">{{ 'write_translation'|trans }}</h2>
+    <div>
+        {% for word in words %}
+            {% if word.language == 'sv' %}
+                <h3>{{ word }}</h3>
+            {% endif %}
+        {% endfor %}
+        <div class="collapse" id="collapseExample">
+            <div class="card card-body">
+                {% for word in words %}
+                    {% if word.language != 'sv' %}
+                        <h4>{{ word }}</h4>
+                    {% endif %}
+                {% endfor %}
+            </div>
         </div>
     </div>
+    <div class="form-floating">
+        {{ form_row(form.translation) }}
+    </div>
+    <div class="form-check text-start my-3">
+    </div>
+    <button class="btn btn-primary" type="submit">{{ 'submit'|trans }}</button>
+    <a href="{{ path('app_word') }}" class="btn btn-secondary">{{ 'reload'|trans }}</a>
+    <a class="btn btn-primary" data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+        {{ 'clue'|trans }}
+    </a>
     {{ form_end(form) }}
 {% endblock %}

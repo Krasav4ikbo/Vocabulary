@@ -14,6 +14,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
+#[ORM\HasLifecycleCallbacks()]
 class User extends BaseEntity implements UserInterface
 {
     #[ORM\Id]
@@ -34,19 +35,15 @@ class User extends BaseEntity implements UserInterface
     #[ORM\Column(length: 255, unique: true, nullable: true)]
     private ?string $apiKey = null;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: false)]
-    private ?DateTimeImmutable $createdAt = null;
-
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    private ?DateTimeImmutable $updatedAt = null;
-/*
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Trip::class, orphanRemoval: true)]
-    private Collection $trips;*/
+    /**
+     * @var Collection<int, TranslationResults>
+     */
+    #[ORM\OneToMany(targetEntity: TranslationResults::class, mappedBy: 'user_uuid')]
+    private Collection $translationResults;
 
     public function __construct()
     {
-        $this->createdAt = new DateTimeImmutable();
-//        $this->trips = new ArrayCollection();
+        $this->translationResults = new ArrayCollection();
     }
 
     public function getUuid(): ?UuidInterface
@@ -109,60 +106,6 @@ class User extends BaseEntity implements UserInterface
         return $this;
     }
 
-    public function getCreatedAt(): ?DateTimeImmutable
-    {
-        return $this->createdAt;
-    }
-
-    public function setCreatedAt(DateTimeImmutable $createdAt): self
-    {
-        $this->createdAt = $createdAt;
-
-        return $this;
-    }
-
-    public function getUpdatedAt(): ?DateTimeImmutable
-    {
-        return $this->updatedAt;
-    }
-
-    public function setUpdatedAt(?DateTimeImmutable $updatedAt): self
-    {
-        $this->updatedAt = $updatedAt;
-
-        return $this;
-    }
-
-/*    /**
-     * @return Collection<int, Trip>
-     */
-    /*public function getTrips(): Collection
-    {
-        return $this->trips;
-    }
-
-    public function addTrip(Trip $trip): self
-    {
-        if (!$this->trips->contains($trip)) {
-            $this->trips->add($trip);
-            $trip->setUserId($this);
-        }
-
-        return $this;
-    }
-
-    public function removeTrip(Trip $trip): self
-    {
-        if ($this->trips->removeElement($trip)) {
-            // set the owning side to null (unless already changed)
-            if ($trip->getUserId() === $this) {
-                $trip->setUserId(null);
-            }
-        }
-
-        return $this;
-    }*/
-
     public function getRoles(): array
     {
         return [];
@@ -175,5 +118,35 @@ class User extends BaseEntity implements UserInterface
     public function getUserIdentifier(): string
     {
         return $this->uuid;
+    }
+
+    /**
+     * @return Collection<int, TranslationResults>
+     */
+    public function getTranslationResults(): Collection
+    {
+        return $this->translationResults;
+    }
+
+    public function addTranslationResult(TranslationResults $translationResult): static
+    {
+        if (!$this->translationResults->contains($translationResult)) {
+            $this->translationResults->add($translationResult);
+            $translationResult->setUserUuid($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTranslationResult(TranslationResults $translationResult): static
+    {
+        if ($this->translationResults->removeElement($translationResult)) {
+            // set the owning side to null (unless already changed)
+            if ($translationResult->getUserUuid() === $this) {
+                $translationResult->setUserUuid(null);
+            }
+        }
+
+        return $this;
     }
 }

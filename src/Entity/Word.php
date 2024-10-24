@@ -11,7 +11,8 @@ use Ramsey\Uuid\Doctrine\UuidGenerator;
 use Ramsey\Uuid\UuidInterface;
 
 #[ORM\Entity(repositoryClass: WordRepository::class)]
-class Word
+#[ORM\HasLifecycleCallbacks()]
+class Word extends BaseEntity
 {
     #[ORM\Id]
     #[ORM\Column(type: "uuid", unique: true)]
@@ -25,12 +26,6 @@ class Word
     #[ORM\Column]
     private ?int $complexity = null;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: false)]
-    private ?\DateTimeImmutable $createdAt = null;
-
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    private ?\DateTimeImmutable $updatedAt = null;
-
     /**
      * @var Collection<int, Translation>
      */
@@ -39,10 +34,16 @@ class Word
 
     private string $translation;
 
+    /**
+     * @var Collection<int, TranslationResults>
+     */
+    #[ORM\OneToMany(targetEntity: TranslationResults::class, mappedBy: 'word')]
+    private Collection $translationResults;
+
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
         $this->translations = new ArrayCollection();
+        $this->translationResults = new ArrayCollection();
     }
 
     public function getId(): UuidInterface|string
@@ -86,31 +87,6 @@ class Word
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
-    {
-        return $this->createdAt;
-    }
-
-
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static
-    {
-        $this->createdAt = $createdAt;
-
-        return $this;
-    }
-
-    public function getUpdatedAt(): ?\DateTimeImmutable
-    {
-        return $this->updatedAt;
-    }
-
-    public function setUpdatedAt(?\DateTimeImmutable $updatedAt): static
-    {
-        $this->updatedAt = $updatedAt;
-
-        return $this;
-    }
-
     /**
      * @return Collection<int, Translation>
      */
@@ -149,5 +125,35 @@ class Word
     public function setTranslation(string $translation): void
     {
         $this->translation = $translation;
+    }
+
+    /**
+     * @return Collection<int, TranslationResults>
+     */
+    public function getTranslationResults(): Collection
+    {
+        return $this->translationResults;
+    }
+
+    public function addTranslationResult(TranslationResults $translationResult): static
+    {
+        if (!$this->translationResults->contains($translationResult)) {
+            $this->translationResults->add($translationResult);
+            $translationResult->setWordUuid($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTranslationResult(TranslationResults $translationResult): static
+    {
+        if ($this->translationResults->removeElement($translationResult)) {
+            // set the owning side to null (unless already changed)
+            if ($translationResult->getWordUuid() === $this) {
+                $translationResult->setWordUuid(null);
+            }
+        }
+
+        return $this;
     }
 }

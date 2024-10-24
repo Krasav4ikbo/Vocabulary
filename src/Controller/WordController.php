@@ -1,17 +1,16 @@
 <?php
+
 namespace App\Controller;
 
 use App\Entity\Word;
-use App\Form\Word\WordsCompareForm;
-use App\Repository\WordRepository;
+use App\Factory\Form\WordsCompareFormFactory;
 use App\Services\WordCompareService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Form\Extension\Core\Type\HiddenType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class WordController extends AbstractController
 {
@@ -21,32 +20,45 @@ class WordController extends AbstractController
         return $this->render('word/success.html.twig');
     }
 
-    #[Route('/word-check', name: 'app_word_check', methods: ['GET', 'POST'])]
-    public function check(Request $request, WordCompareService $wordCompareService): Response
+    #[Route('/word', name: 'app_word', methods: ['GET'])]
+    public function index(WordCompareService $wordCompareService, WordsCompareFormFactory $factory): Response
     {
         $word = $wordCompareService->getWordForTraining();
 
-        $form = $this->createForm(WordsCompareForm::class, $word);
+        return $this->render('word/check.html.twig', [
+            'form' => $factory->create($word, $this->generateUrl('app_word_check')),
+            'words' => $word->getTranslations()
+        ]);
+    }
+
+    #[Route('/word-check', name: 'app_word_check', methods: ['POST'])]
+    public function check(
+        Request $request,
+        WordCompareService $wordCompareService,
+        TranslatorInterface $translator,
+        WordsCompareFormFactory $factory
+    ): Response
+    {
+        $word = new Word();
+
+        $form = $factory->create($word, $this->generateUrl('app_word_check'));
 
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $word = $form->getData();
 
-            if($wordCompareService->checkWordTranslation($word->getUuid(), $word->getTranslation())) {
-                $wordCompareService->markTranslationAsSuccess($word->getUuid());
-
+            if ($wordCompareService->checkWordTranslation($word)) {
                 return $this->redirectToRoute('app_word_success');
-            } else {
-                $wordCompareService->markTranslationAsFailed($word->getUuid());
-
-                $form->addError(new FormError('Translation is wrong. Try one more time'));
             }
+
+            $form->addError(new FormError($translator->trans('translation_error')));
         }
 
         return $this->render('word/check.html.twig', [
             'form' => $form,
-            'word' => $wordCompareService->getWordTranslationByLanguage($word, 'sv')
+            'words' => $wordCompareService->findOneByUuid($word->getUuid())
+                ->getTranslations()
         ]);
     }
 }

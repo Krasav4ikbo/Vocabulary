@@ -45,4 +45,19 @@ class WordRepository extends ServiceEntityRepository
                 ->getQuery()
                 ->getOneOrNullResult();
         }
+
+    public function findOneForTraining(): ?Word
+    {
+        $count = $this->createQueryBuilder('w')
+            ->select($this->createQueryBuilder('w')->expr()->count('w.uuid'))
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return $this->createQueryBuilder('w')
+            ->select()
+            ->setFirstResult(rand(1, $count))
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

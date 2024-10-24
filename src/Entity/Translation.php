@@ -9,7 +9,8 @@ use Ramsey\Uuid\Doctrine\UuidGenerator;
 use Ramsey\Uuid\UuidInterface;
 
 #[ORM\Entity(repositoryClass: TranslationRepository::class)]
-class Translation
+#[ORM\HasLifecycleCallbacks()]
+class Translation extends BaseEntity
 {
     #[ORM\Id]
     #[ORM\Column(type: "string", unique: true)]
@@ -23,20 +24,9 @@ class Translation
     #[ORM\Column(length: 3)]
     private ?string $language = null;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: false)]
-    private ?\DateTimeImmutable $createdAt = null;
-
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
-    private ?\DateTimeImmutable $updatedAt = null;
-
     #[ORM\ManyToOne(targetEntity: Word::class, inversedBy: 'translations')]
-    #[ORM\JoinColumn(name: 'word_id', referencedColumnName: 'uuid', nullable: true)]
+    #[ORM\JoinColumn(name: 'word_uuid', referencedColumnName: 'uuid', nullable: true, onDelete: 'cascade')]
     private ?Word $word;
-
-    public function __construct()
-    {
-        $this->createdAt = new \DateTimeImmutable();
-    }
 
     public function getId(): UuidInterface|string
     {
@@ -75,30 +65,6 @@ class Translation
     public function setLanguage(string $language): static
     {
         $this->language = $language;
-
-        return $this;
-    }
-
-    public function getCreatedAt(): ?\DateTimeImmutable
-    {
-        return $this->createdAt;
-    }
-
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static
-    {
-        $this->createdAt = $createdAt;
-
-        return $this;
-    }
-
-    public function getUpdatedAt(): ?\DateTimeImmutable
-    {
-        return $this->updatedAt;
-    }
-
-    public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
-    {
-        $this->updatedAt = $updatedAt;
 
         return $this;
     }

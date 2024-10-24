@@ -1,3 +1,9 @@
 word: Word
 language: Language
 submit: Submit
+write_translation: Write translations
+translation_error: Translation is wrong. Try one more time
+correct: Correct
+go_next: Go next
+reload: Reload
+clue: Clue
