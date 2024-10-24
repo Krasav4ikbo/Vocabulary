@@ -16,13 +16,14 @@ return [
         'path' => './assets/app.js',
         'entrypoint' => true,
     ],
-    '@hotwired/stimulus' => [
-        'version' => '3.2.2',
+    '@popperjs/core' => [
+        'version' => '2.11.8',
     ],
-    '@symfony/stimulus-bundle' => [
-        'path' => './vendor/symfony/stimulus-bundle/assets/dist/loader.js',
+    'bootstrap/dist/css/bootstrap.min.css' => [
+        'version' => '5.3.3',
+        'type' => 'css',
     ],
-    '@hotwired/turbo' => [
-        'version' => '7.3.0',
+    'bootstrap' => [
+        'version' => '5.3.3',
     ],
 ];
