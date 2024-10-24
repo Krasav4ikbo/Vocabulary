@@ -1,25 +1,39 @@
+version: '3.8'
 
 services:
-###> doctrine/doctrine-bundle ###
-  database:
-    image: postgres:${POSTGRES_VERSION:-16}-alpine
+  vocabulary-database:
+    container_name: vocabulary-database
+    image: mysql:8
+    command: ["mysqld", "--mysql-native-password=ON"]
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-app}
-      # You should definitely change the password in production
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
-      POSTGRES_USER: ${POSTGRES_USER:-app}
-    healthcheck:
-      test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB:-app}", "-U", "${POSTGRES_USER:-app}"]
-      timeout: 5s
-      retries: 5
-      start_period: 60s
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: vocabulary
+      MYSQL_USER: vocabulary
+      MYSQL_PASSWORD: vocabulary
+    ports:
+      - '3306:3306'
     volumes:
-      - database_data:/var/lib/postgresql/data:rw
-      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-      # - ./docker/db/data:/var/lib/postgresql/data:rw
-###< doctrine/doctrine-bundle ###
-
-volumes:
-###> doctrine/doctrine-bundle ###
-  database_data:
-###< doctrine/doctrine-bundle ###
+      - ./conf.d/mysql:/var/lib/mysql
+  vocabulary-php:
+    container_name: vocabulary-php
+    build:
+      context: .
+      dockerfile: ./conf.d/php/Dockerfile
+    ports:
+      - '9000:9000'
+    volumes:
+      - ./:/var/www/symfony_docker
+      - ./var/log:/var/log
+    depends_on:
+      - vocabulary-database
+  vocabulary-nginx:
+    container_name: vocabulary-nginx
+    image: nginx:stable-alpine
+    ports:
+      - '8080:80'
+    volumes:
+      - ./:/var/www/symfony_docker
+      - ./conf.d/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - vocabulary-php
+      - vocabulary-database
